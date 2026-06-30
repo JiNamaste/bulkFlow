@@ -1,0 +1,3 @@
+transactionId,loanAccountNo,customerName,amount,status,transactionDate
+TXN001,LN1001,Ujjwal,5000,SUCCESS,2026-06-28
+TXN002,LN1002,Rahul,3000,FAILED,2026-06-28

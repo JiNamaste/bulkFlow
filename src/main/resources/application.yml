@@ -1,0 +1,19 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: bulkflow
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/bulkFlow
+    username: postgres
+    password: 123
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+file:
+  upload-dir: uploads
