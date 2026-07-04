@@ -28,6 +28,7 @@ public class UploadJob {
     private Long successRecords;
 
     private Long failedRecords;
+    private String fileType;
 
     private LocalDateTime startedAt;
 

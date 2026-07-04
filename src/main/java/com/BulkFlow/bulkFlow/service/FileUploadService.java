@@ -2,6 +2,7 @@ package com.BulkFlow.bulkFlow.service;
 
 import com.BulkFlow.bulkFlow.dto.FileUploadResponse;
 import com.BulkFlow.bulkFlow.entity.UploadJob;
+import com.BulkFlow.bulkFlow.proccessor.CsvProcessorService;
 import com.BulkFlow.bulkFlow.repositiory.UploadJobRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,11 +19,12 @@ import java.time.LocalDateTime;
 public class FileUploadService implements IFileUploadService{
 
     private final UploadJobRepository uploadJobRepository;
+    private final CsvProcessorService csvProcessorService;
 
     @Value("${file.upload-dir}")
     private String uploadDir;
 
-    public FileUploadResponse uploadFile(MultipartFile file){
+    public FileUploadResponse uploadFile(MultipartFile file,String fileType){
         UploadJob savedJob = null;
     try {
         if (file.isEmpty()) {
@@ -43,24 +45,26 @@ public class FileUploadService implements IFileUploadService{
         UploadJob job = UploadJob.builder()
                 .fileName(fileName)
                 .filePath(filePath.toString())
+                .fileType(fileType)
                 .status("UPLOADED")
                 .totalRecords(0L)
                 .successRecords(0L)
                 .failedRecords(0L)
                 .startedAt(LocalDateTime.now())
                 .build();
+        savedJob = uploadJobRepository.save(job);
 
-         savedJob = uploadJobRepository.save(job);
+        csvProcessorService.processFile(savedJob.getId());
+
+
     } catch (Exception ignored){
 
     }
-
-
         return FileUploadResponse.builder()
                 .jobId(savedJob.getId())
                 .fileName(savedJob.getFileName())
-                .status(savedJob.getStatus())
-                .message("File uploaded successfully.")
+                .status("PROCESSING")
+                .message("File uploaded successfully. Processing started.")
                 .build();
     }
 

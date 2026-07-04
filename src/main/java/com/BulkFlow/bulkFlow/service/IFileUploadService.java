@@ -5,7 +5,7 @@ import com.BulkFlow.bulkFlow.entity.UploadJob;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface IFileUploadService {
-    FileUploadResponse uploadFile(MultipartFile file);
+   FileUploadResponse uploadFile(MultipartFile file, String fileType);
     UploadJob getJobStatus(Long jobId);
 
 }

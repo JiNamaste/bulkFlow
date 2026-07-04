@@ -15,8 +15,8 @@ public class FileUploadController {
     private final IFileUploadService fileUploadService;
 
     @PostMapping("/upload")
-    public FileUploadResponse uploadFile(@RequestParam("file") MultipartFile file) throws Exception {
-        return fileUploadService.uploadFile(file);
+    public FileUploadResponse uploadFile(@RequestParam("file") MultipartFile file, @RequestParam("fileType") String fileType) throws Exception {
+        return fileUploadService.uploadFile(file, fileType);
     }
 
     @GetMapping("/{jobId}/status")
