@@ -6,6 +6,45 @@ BulkFlow is a high-performance bulk file processing framework designed for finte
 
 ---
 
+# Use Cases
+
+## Banking
+- EMI uploads
+- Settlement reconciliation
+- Loan booking imports
+
+## Fintech
+- Wallet transaction ingestion
+- Merchant settlement uploads
+- Payment reconciliation
+
+## Insurance
+- Bulk policy onboarding
+- Claim settlement processing
+
+---
+
+# Design Patterns Used
+
+- Strategy Pattern
+- Factory Pattern
+- Generic Framework Design
+- Chunk Processing Pattern
+- Retry Pattern
+
+---
+
+# Scalability Features
+
+- Handles millions of records
+- Supports multiple transaction types
+- Parallel chunk processing
+- Takes less processing time by splitting large files into concurrently processed chunks
+- Retryable failed chunks
+- Generic extensible architecture
+
+---
+
 # Features
 
 - Generic bulk upload engine
@@ -380,39 +419,3 @@ Every 5 minutes
 - JMeter load testing
 
 ---
-
-# Use Cases
-
-## Banking
-- EMI uploads
-- Settlement reconciliation
-- Loan booking imports
-
-## Fintech
-- Wallet transaction ingestion
-- Merchant settlement uploads
-- Payment reconciliation
-
-## Insurance
-- Bulk policy onboarding
-- Claim settlement processing
-
----
-
-# Design Patterns Used
-
-- Strategy Pattern
-- Factory Pattern
-- Generic Framework Design
-- Chunk Processing Pattern
-- Retry Pattern
-
----
-
-# Scalability Features
-
-- Handles millions of records
-- Supports multiple transaction types
-- Parallel chunk processing
-- Retryable failed chunks
-- Generic extensible architecture
