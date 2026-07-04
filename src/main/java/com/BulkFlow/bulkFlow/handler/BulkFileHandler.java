@@ -2,7 +2,7 @@ package com.BulkFlow.bulkFlow.handler;
 
 import com.BulkFlow.bulkFlow.enumpackage.ChunkStatus;
 
-public interface BulkFileHandler<D, E> {
+public interface BulkFileHandler<D, E,ER> {
 
     String fileType();
 
@@ -14,5 +14,7 @@ public interface BulkFileHandler<D, E> {
     String mainTableName();
 
     String errorTableName();
+    ER toErrorEntity(String rawData, String errorMessage, Long jobId);
 
+    boolean alreadyExists(D dto, Long jobId);
 }

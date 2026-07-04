@@ -24,7 +24,6 @@ import java.util.concurrent.CompletableFuture;
 public class ChunkProcessorService {
 
     private final ChunkProcessingStatusRepository chunkRepository;
-    private final GenericErrorRecordService genericErrorRecordService;
     private final EntityManager entityManager;
     private final ChunkStatusService chunkStatusService;
 
@@ -44,16 +43,21 @@ public class ChunkProcessorService {
                     String error = handler.validate(dto);
 
                     if (error == null) {
+                        if (handler.alreadyExists(dto, jobId)) {
+                            continue;
+                        }
                         Object entity = handler.toEntity(dto, jobId);
                         entityManager.persist(entity);
                         success++;
                     } else {
-                        genericErrorRecordService.saveError(handler.errorTableName(), jobId, line, error);
+                        Object errorEntity = handler.toErrorEntity(line, error, jobId);
+                        entityManager.persist(errorEntity);
                         failed++;
                     }
 
                 } catch (Exception ex) {
-                    genericErrorRecordService.saveError(handler.errorTableName(), jobId, line, ex.getMessage());
+                    Object errorEntity = handler.toErrorEntity(line,ex.getMessage(), jobId);
+                    entityManager.persist(errorEntity);
                     failed++;
                 }
             }

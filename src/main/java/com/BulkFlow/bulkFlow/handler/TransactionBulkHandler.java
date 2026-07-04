@@ -1,7 +1,9 @@
 package com.BulkFlow.bulkFlow.handler;
 
 import com.BulkFlow.bulkFlow.dto.TransactionRecordDto;
+import com.BulkFlow.bulkFlow.entity.TransactionErrorRecord;
 import com.BulkFlow.bulkFlow.entity.TransactionRecord;
+import com.BulkFlow.bulkFlow.repositiory.TransactionRecordRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -11,8 +13,9 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class TransactionBulkHandler implements BulkFileHandler<TransactionRecordDto, TransactionRecord> {
+public class TransactionBulkHandler implements BulkFileHandler<TransactionRecordDto, TransactionRecord, TransactionErrorRecord> {
 
+    private final TransactionRecordRepository transactionRecordRepository;
     @Override
     public String fileType() {
         return "TRANSACTION";
@@ -89,5 +92,20 @@ public class TransactionBulkHandler implements BulkFileHandler<TransactionRecord
     @Override
     public String errorTableName() {
         return "transaction_record_error";
+    }
+
+    @Override
+    public TransactionErrorRecord toErrorEntity(String rawData, String errorMessage, Long jobId) {
+        return TransactionErrorRecord.builder()
+                .jobId(jobId)
+                .rawData(rawData)
+                .errorReason(errorMessage)
+                .createdAt(LocalDateTime.now())
+                .build();
+    }
+
+    @Override
+    public boolean alreadyExists(TransactionRecordDto dto, Long jobId) {
+        return transactionRecordRepository.existsByJobIdAndTransactionId(jobId, dto.getTransactionId());
     }
 }

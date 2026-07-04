@@ -7,6 +7,15 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(
+        name = "transaction_record",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_transaction_record_job_transaction",
+                        columnNames = {"job_id", "transaction_id"}
+                )
+        }
+)
 @Getter
 @Setter
 @Builder

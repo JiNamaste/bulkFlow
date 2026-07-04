@@ -8,6 +8,7 @@ import com.BulkFlow.bulkFlow.handler.BulkFileHandler;
 import com.BulkFlow.bulkFlow.handler.BulkFileHandlerFactory;
 import com.BulkFlow.bulkFlow.repositiory.ChunkProcessingStatusRepository;
 import com.BulkFlow.bulkFlow.repositiory.UploadJobRepository;
+import com.BulkFlow.bulkFlow.service.FileHeaderValidationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ public class CsvProcessorService {
     private final BulkFileHandlerFactory handlerFactory;
     private final ChunkProcessingStatusRepository chunkRepository;
     private final ChunkProcessorService chunkProcessorService;
+    private final FileHeaderValidationService fileHeaderValidationService;
 
     @Async("fileProcessorExecutor")
     public void processFile(Long jobId) {
@@ -49,8 +51,8 @@ public class CsvProcessorService {
 
             try (BufferedReader reader = Files.newBufferedReader(Path.of(job.getFilePath()))) {
 
-                reader.readLine(); // skip header
-
+                String uploadedHeader = reader.readLine();
+                fileHeaderValidationService.validateHeader(job.getFileType(), uploadedHeader);
                 String line;
                 List<String> chunkLines = new ArrayList<>();
 

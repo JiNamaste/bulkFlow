@@ -2,14 +2,14 @@ package com.BulkFlow.bulkFlow.service;
 
 import com.BulkFlow.bulkFlow.dto.FileUploadResponse;
 import com.BulkFlow.bulkFlow.entity.UploadJob;
+import com.BulkFlow.bulkFlow.exception.FileValidationException;
+import com.BulkFlow.bulkFlow.exception.JobNotFoundException;
 import com.BulkFlow.bulkFlow.proccessor.CsvProcessorService;
 import com.BulkFlow.bulkFlow.repositiory.UploadJobRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -28,11 +28,11 @@ public class FileUploadService implements IFileUploadService{
         UploadJob savedJob = null;
     try {
         if (file.isEmpty()) {
-            throw new RuntimeException("File is empty");
+            throw new FileValidationException("File is empty");
         }
 
         if (!file.getOriginalFilename().endsWith(".csv")) {
-            throw new RuntimeException("Only CSV file is allowed");
+            throw new FileValidationException("Only CSV file is allowed");
         }
 
         Files.createDirectories(Path.of(uploadDir));
@@ -71,7 +71,7 @@ public class FileUploadService implements IFileUploadService{
     @Override
     public UploadJob getJobStatus(Long jobId) {
         return uploadJobRepository.findById(jobId)
-                .orElseThrow(() -> new RuntimeException("Job not found"));
+                .orElseThrow(() -> new JobNotFoundException("Job not found"));
     }
 
 

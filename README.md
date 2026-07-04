@@ -1,192 +1,46 @@
-# BulkFlow — Fintech Bulk Processing Framework
+# BulkFlow
 
-## Overview
+## Generic Fintech Bulk Processing Framework
 
-BulkFlow is a high-performance fintech-oriented bulk file processing framework designed to handle millions of transaction records efficiently using asynchronous processing, multithreading, chunk-based execution, generic handlers, and batch persistence.
-
-The framework is built to solve enterprise-scale financial data ingestion problems such as:
-
-- Loan repayment uploads
-- Settlement processing
-- Payment reconciliation
-- EMI transaction ingestion
-- Customer onboarding bulk uploads
-- Daily EOD processing
-- Banking transaction imports
-
-BulkFlow is designed as a reusable framework where any new transaction type can integrate by simply adding:
-
-- DTO
-- Entity
-- Custom Handler
-
-without modifying the core processing engine.
+BulkFlow is a high-performance bulk file processing framework designed for fintech and banking systems to process millions of records efficiently using asynchronous execution, chunk-based processing, multithreading, retry mechanisms, and generic handler architecture.
 
 ---
 
-# Problem Statement
+# Features
 
-Financial systems process huge files daily containing lakhs or millions of records.
-
-Traditional approaches face issues such as:
-
-- API timeout
-- Memory overflow
-- Sequential processing bottlenecks
-- DB overload
-- Partial upload failures
-- Duplicate records
-- Retry complexity
-- Tight coupling between file types and processing logic
-
-BulkFlow solves these problems through:
-
-- Asynchronous processing
-- Chunk-based parallel execution
-- Generic handler architecture
-- Chunk-level tracking
-- Failure recovery support
-- Dynamic transaction-type handling
+- Generic bulk upload engine
+- Dynamic file type support
+- CSV upload processing
+- Asynchronous background execution
+- Parallel chunk processing
+- Chunk-level retry mechanism
+- Generic handler architecture using Strategy Pattern
+- Header validation using DB configuration
+- Duplicate protection / idempotency
+- Generic error handling
+- Job tracking
+- Chunk tracking
+- Batch persistence
+- ControllerAdvice and custom exception handling
+- Enterprise-grade scalable architecture
 
 ---
 
-# Key Features
+# Tech Stack
 
-## Generic Bulk Upload Engine
-
-Supports multiple file types dynamically:
-
-```text
-TRANSACTION
-CUSTOMER
-LOAN
-PAYMENT
-SETTLEMENT
-```
+- Java 21
+- Spring Boot
+- Spring Data JPA
+- PostgreSQL
+- JdbcTemplate
+- CompletableFuture
+- ThreadPoolTaskExecutor
+- Scheduler
+- Maven
 
 ---
 
-## Asynchronous File Processing
-
-Upload API immediately returns response while processing continues in background.
-
-```text
-Upload Request
-      ↓
-Create Job
-      ↓
-Return jobId immediately
-      ↓
-Background processing starts
-```
-
----
-
-## Chunk-Based Processing
-
-Large CSV files are divided into smaller chunks.
-
-Example:
-
-```text
-Chunk Size = 5000 records
-```
-
-Benefits:
-- Memory optimization
-- Better throughput
-- Easier failure recovery
-
----
-
-## Parallel Chunk Execution
-
-Chunks are processed using thread pools.
-
-```text
-Thread 1 → Chunk 1
-Thread 2 → Chunk 2
-Thread 3 → Chunk 3
-```
-
-Benefits:
-- Faster processing
-- High CPU utilization
-- Horizontal scalability
-
----
-
-## Generic Handler Architecture
-
-Each file type implements custom business logic using Strategy Pattern.
-
-Example:
-
-```text
-TransactionBulkHandler
-CustomerBulkHandler
-LoanBulkHandler
-```
-
-Handler responsibilities:
-- CSV mapping
-- Validation
-- Entity conversion
-- Error table mapping
-
----
-
-## Generic Error Handling
-
-Invalid records are stored in dedicated error tables.
-
-Example:
-
-```text
-transaction_record_error
-customer_record_error
-```
-
-Error tables store:
-- Raw record data
-- Validation failure reason
-- Processing timestamp
-
----
-
-## Chunk-Level Tracking
-
-Each chunk maintains processing status independently.
-
-Statuses:
-
-```text
-PENDING
-PROCESSING
-SUCCESS
-FAILED
-PERMANENT_FAILED
-```
-
-Benefits:
-- Retry failed chunks only
-- Partial success support
-- Better operational visibility
-
----
-
-## Job Tracking
-
-Upload jobs maintain:
-- Total records
-- Success count
-- Failed count
-- Processing status
-- Error details
-
----
-
-# System Architecture
+# Project Architecture
 
 ```text
                 Upload API
@@ -224,7 +78,7 @@ TransactionHandler CustomerHandler LoanHandler
 
 ## UploadJob
 
-Tracks file-level processing information.
+Tracks uploaded file processing.
 
 Fields:
 - fileName
@@ -238,7 +92,7 @@ Fields:
 
 ## ChunkProcessingStatus
 
-Tracks chunk-level execution.
+Tracks each chunk independently.
 
 Fields:
 - chunkNumber
@@ -252,122 +106,282 @@ Fields:
 
 ## BulkFileHandler
 
-Generic contract implemented by all transaction types.
+Generic contract for all transaction types.
 
 Responsibilities:
 - CSV mapping
 - Validation
-- Entity transformation
-- Error table resolution
+- Entity conversion
+- Error entity conversion
+- Duplicate check
 
 ---
 
 ## CsvProcessorService
 
-Responsible for:
-- Reading files
-- Creating chunks
-- Submitting chunks in parallel
-- Aggregating chunk results
+Responsibilities:
+- Read CSV
+- Create chunks
+- Submit chunks in parallel
+- Aggregate final result
 
 ---
 
 ## ChunkProcessorService
 
-Responsible for:
-- Chunk-level validation
-- Batch persistence
-- Error handling
-- Chunk status updates
+Responsibilities:
+- Validate records
+- Persist valid records
+- Persist invalid records
+- Update chunk status
 
 ---
 
-# Technologies Used
+# Supported File Types
+
+Currently implemented:
+
+- TRANSACTION
+- LOAN_REPAYMENT
+
+New file types can be added by creating:
+- DTO
+- Entity
+- Error Entity
+- Bulk Handler
+
+without changing the core engine.
+
+---
+
+# Upload Flow
 
 ```text
-Java 21
-Spring Boot
-Spring Data JPA
-JdbcTemplate
-PostgreSQL
-ThreadPoolTaskExecutor
-CompletableFuture
-Asynchronous Processing
-Chunk Processing
-Docker
-Swagger
-JMeter
+User uploads CSV
+        ↓
+File validation
+        ↓
+Save file locally
+        ↓
+Create upload job
+        ↓
+Async background processing
+        ↓
+Read CSV in chunks
+        ↓
+Parallel chunk execution
+        ↓
+Validation + persistence
+        ↓
+Update job/chunk status
+```
+
+---
+
+# Retry Mechanism
+
+If a chunk fails:
+
+```text
+Chunk marked FAILED
+        ↓
+Scheduler picks failed chunks
+        ↓
+Retry only failed chunks
+        ↓
+Update retry count
+        ↓
+SUCCESS or PERMANENT_FAILED
+```
+
+---
+
+# Header Validation
+
+Expected CSV headers are configured dynamically in DB using:
+
+```text
+file_type_config
+```
+
+This avoids hardcoded column definitions.
+
+---
+
+# Error Handling
+
+Invalid records are stored in dedicated error tables.
+
+Examples:
+
+```text
+transaction_record_error
+loan_repayment_record_error
 ```
 
 ---
 
 # Performance Optimizations
 
-## Asynchronous Processing
-Avoids blocking upload API requests.
+- Async processing
+- Parallel chunk execution
+- Batch persistence
+- Memory-safe streaming
+- Chunk-level transactions
+- Retry support
+- Duplicate protection
 
 ---
 
-## Parallel Chunk Processing
-Improves throughput for large datasets.
+# API Examples
+
+## Upload File
+
+```http
+POST /api/files/upload?fileType=TRANSACTION
+```
+
+## Get Job Status
+
+```http
+GET /api/jobs/{jobId}/status
+```
 
 ---
 
-## Batch Persistence
-Reduces DB round-trips.
+# How to Run the Project
+
+## 1. Clone Repository
+
+```bash
+git clone <your-github-url>
+cd bulkflow
+```
 
 ---
 
-## Chunk-Level Transactions
-Ensures partial success handling.
+## 2. Configure PostgreSQL
+
+Create database:
+
+```sql
+CREATE DATABASE bulkflow_db;
+```
+
+Update `application.yml`:
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/bulkflow_db
+    username: postgres
+    password: root
+```
 
 ---
 
-## Memory-Safe Processing
-Avoids loading full file into memory.
+## 3. Run Application
+
+```bash
+mvn clean install
+mvn spring-boot:run
+```
+
+Application starts on:
+
+```text
+http://localhost:8080
+```
 
 ---
 
-## Generic Framework Design
-Supports multiple file types without changing core engine.
+## 4. Insert File Type Config
+
+### TRANSACTION
+
+```sql
+INSERT INTO file_type_config (file_type, expected_headers, active)
+VALUES (
+    'TRANSACTION',
+    'transactionId,loanAccountNo,customerName,amount,status,transactionDate',
+    true
+);
+```
+
+### LOAN_REPAYMENT
+
+```sql
+INSERT INTO file_type_config (file_type, expected_headers, active)
+VALUES (
+    'LOAN_REPAYMENT',
+    'repaymentId,loanAccountNo,customerId,customerName,mobileNumber,email,branchCode,ifscCode,paymentMode,amount,penaltyAmount,totalAmount,status,paymentDate,dueDate,referenceNumber,remarks',
+    true
+);
+```
+
+---
+
+## 5. Upload CSV File
+
+### Upload Transaction File
+
+```http
+POST /api/files/upload?fileType=TRANSACTION
+```
+
+### Upload Loan Repayment File
+
+```http
+POST /api/files/upload?fileType=LOAN_REPAYMENT
+```
+
+Request Type:
+
+```text
+multipart/form-data
+```
+
+Key:
+
+```text
+file
+```
+
+---
+
+## 6. Check Job Status
+
+```http
+GET /api/jobs/{jobId}/status
+```
+
+---
+
+## 7. Retry Mechanism
+
+Failed chunks are automatically retried by scheduler.
+
+Retry interval:
+
+```text
+Every 5 minutes
+```
 
 ---
 
 # Future Enhancements
 
-## Retry Scheduler
-Automatically retries failed chunks.
+- Kafka integration
+- Redis caching
+- S3 storage
+- WebSocket progress tracking
+- Docker & Kubernetes deployment
+- Prometheus & Grafana monitoring
+- JMeter load testing
 
 ---
 
-## Kafka Integration
-Decouple ingestion from processing.
-
----
-
-## Redis Integration
-- Job progress caching
-- Duplicate detection
-- Rate limiting
-
----
-
-## S3 / Cloud Storage
-Store uploaded files externally.
-
----
-
-## Monitoring
-Prometheus + Grafana dashboards.
-
----
-
-## Kubernetes Deployment
-Horizontal scaling for chunk workers.
-
----
-
-# Example Use Cases
+# Use Cases
 
 ## Banking
 - EMI uploads
@@ -382,3 +396,23 @@ Horizontal scaling for chunk workers.
 ## Insurance
 - Bulk policy onboarding
 - Claim settlement processing
+
+---
+
+# Design Patterns Used
+
+- Strategy Pattern
+- Factory Pattern
+- Generic Framework Design
+- Chunk Processing Pattern
+- Retry Pattern
+
+---
+
+# Scalability Features
+
+- Handles millions of records
+- Supports multiple transaction types
+- Parallel chunk processing
+- Retryable failed chunks
+- Generic extensible architecture
